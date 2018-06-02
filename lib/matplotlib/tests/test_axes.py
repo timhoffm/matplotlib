@@ -61,6 +61,17 @@ def test_spy():
     ax.spy(a)
 
 
+def test_spy_warn_ignored_kwargs():
+    fig, ax = plt.subplots()
+    for unsupported_kw in [{'interpolation': 'nearest'},
+                           {'marker': 'o', 'linestyle': 'solid'}]:
+        with warnings.catch_warnings(record=True) as w:
+            warnings.simplefilter("always")
+            ax.spy(np.eye(3, 3), **unsupported_kw)
+            assert len(w) == 1
+            assert issubclass(w[0].category, IgnoredKeywordWarning)
+
+
 @image_comparison(baseline_images=['matshow'],
                   extensions=['png'], style='mpl20')
 def test_matshow():

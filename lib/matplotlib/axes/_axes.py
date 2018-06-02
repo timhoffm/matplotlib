@@ -35,7 +35,7 @@ import matplotlib.transforms as mtransforms
 import matplotlib.tri as mtri
 from matplotlib.cbook import (
     mplDeprecation, warn_deprecated, STEP_LOOKUP_MAP, iterable,
-    safe_first_element)
+    safe_first_element, IgnoredKeywordWarning)
 from matplotlib.container import BarContainer, ErrorbarContainer, StemContainer
 from matplotlib.axes._base import _AxesBase, _process_plot_format
 
@@ -7397,10 +7397,13 @@ class Axes(_AxesBase):
             if 'cmap' not in kwargs:
                 kwargs['cmap'] = mcolors.ListedColormap(['w', 'k'],
                                                         name='binary')
-            nr, nc = Z.shape
-            extent = [-0.5, nc - 0.5, nr - 0.5, -0.5]
+            if 'interpolation' in kwargs:
+                kwargs.pop('interpolation')
+                warnings.warn(
+                    '"interpolation" keyword argument will be ignored',
+                    IgnoredKeywordWarning)
             ret = self.imshow(mask, interpolation='nearest', aspect=aspect,
-                                extent=extent, origin=origin, **kwargs)
+                              origin=origin, **kwargs)
         else:
             if hasattr(Z, 'tocoo'):
                 c = Z.tocoo()
@@ -7419,6 +7422,11 @@ class Axes(_AxesBase):
                 marker = 's'
             if markersize is None:
                 markersize = 10
+            if 'linestyle' in kwargs:
+                kwargs.pop('linestyle')
+                warnings.warn(
+                    '"interpolation" keyword argument will be ignored',
+                    IgnoredKeywordWarning)
             marks = mlines.Line2D(x, y, linestyle='None',
                          marker=marker, markersize=markersize, **kwargs)
             self.add_line(marks)
