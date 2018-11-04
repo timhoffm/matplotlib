@@ -15,6 +15,7 @@ this file.
 
 import inspect
 from inspect import Parameter
+import itertools
 from pathlib import Path
 import textwrap
 
@@ -272,6 +273,18 @@ def boilerplate_gen():
 
     yield '\n'
     yield '_setup_pyplot_info_docstrings()'
+
+    # extend __all__
+    all_text_wrapper = textwrap.TextWrapper(
+        break_long_words=False, width=74,
+        initial_indent=' ' * 4, subsequent_indent=' ' * 4)
+
+    t = all_text_wrapper.fill(
+            ', '.join(["'%s'" % funcname.split(':', 1)[0]
+                       for funcname in itertools.chain(_commands, cmappable)]))
+
+    yield '\n'
+    yield '__all__ += [\n{}\n]'.format(t)
 
 
 def build_pyplot():
