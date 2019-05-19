@@ -218,7 +218,7 @@ per-file-ignores =
     examples/shapes_and_collections/patch_collection.py: E402
     examples/shapes_and_collections/path_patch.py: E402, E501
     examples/shapes_and_collections/quad_bezier.py: E402
-    examples/shapes_and_collections/scatter.py: E402
+    examples/shapes_and_collections/scatter.py: E402d
     examples/showcase/firefox.py: E501
     examples/specialty_plots/anscombe.py: E402, E501
     examples/specialty_plots/radar_chart.py: E402
@@ -227,11 +227,12 @@ per-file-ignores =
     examples/specialty_plots/sankey_rankine.py: E402
     examples/specialty_plots/skewt.py: E402
     examples/statistics/boxplot_demo.py: E501
+    examples/statistics/horizontal_barchart_distribution.py: E402
     examples/style_sheets/bmh.py: E501
     examples/style_sheets/ggplot.py: E501
     examples/style_sheets/plot_solarizedlight2.py: E501
     examples/subplots_axes_and_figures/axes_margins.py: E402
-    examples/subplots_axes_and_figures/axes_zoom_effect.py: E402
+    examples/subplots_axes_andmath_figures/axes_zoom_effect.py: E402
     examples/subplots_axes_and_figures/demo_constrained_layout.py: E402
     examples/subplots_axes_and_figures/demo_tight_layout.py: E402
     examples/subplots_axes_and_figures/secondary_axis.py: E402
