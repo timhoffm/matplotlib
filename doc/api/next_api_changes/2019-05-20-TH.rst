@@ -1,5 +1,5 @@
 Deprecations
 ````````````
 
-``matplotlib.figure.AxesStack`` is considered private API and will be removed
-from the public API in future versions.
+``matplotlib.testing.decorators.CleanupTestcase`` and
+``matplotlib.testing.decorators.clenup()`` are deprecated.

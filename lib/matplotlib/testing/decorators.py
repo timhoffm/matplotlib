@@ -34,6 +34,7 @@ def _cleanup_cm():
         plt.close("all")
 
 
+@cbook.deprecated('3.2')
 class CleanupTestCase(unittest.TestCase):
     """A wrapper for unittest.TestCase that includes cleanup operations."""
     @classmethod
@@ -45,6 +46,7 @@ class CleanupTestCase(unittest.TestCase):
         cls._cm.__exit__(None, None, None)
 
 
+@cbook.deprecated('3.2')
 def cleanup(style=None):
     """
     A decorator to ensure that any global state is reset before
