@@ -2365,12 +2365,8 @@ class YAxis(Axis):
         position : {'left', 'right'}
         """
         x, y = self.offsetText.get_position()
-        if position == 'left':
-            x = 0
-        elif position == 'right':
-            x = 1
-        else:
-            raise ValueError("Position accepts only [ 'left' | 'right' ]")
+        cbook._check_in_list(['left', 'right'], position=position)
+        x = 0 if position == 'left' else 1
 
         self.offsetText.set_ha(position)
         self.offsetText.set_position((x, y))
