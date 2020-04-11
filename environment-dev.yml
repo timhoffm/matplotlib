@@ -1,0 +1,42 @@
+name: mpl-dev
+channels:
+  - conda-forge
+dependencies:
+  - numpy>=1.15
+  - setuptools
+  - cycler>=0.10.0
+  - python-dateutil>=2.1
+  - kiwisolver>=1.0.0
+  - pillow>=6.2
+  - pyparsing
+  - pyqt
+  - pygobject
+  - wxpython
+  - cairocffi
+  - tornado
+  # building documentation
+  - sphinx>=1.8.1,!=2.0.0
+  - colorspacious
+  - ipython
+  - ipywidgets
+  - numpydoc>=0.8
+  - sphinx-gallery>=0.7
+  - sphinx-copybutton
+  - graphviz
+  # testing
+  - coverage
+  - pytest!=4.6.0,!=5.4.0
+  - pytest-cov
+  - pytest-rerunfailures
+  - pytest-timeout
+  - pytest-xdist
+  - tornado
+  - ipykernel
+  - nbconvert[execute]
+  - nbformat!=5.0.0,!=5.0.1
+  - pandas!=0.25.0
+  - pytz
+  - flake8>=3.7
+  - pydocstyle<4.0
+  - flake8-docstrings
+  
