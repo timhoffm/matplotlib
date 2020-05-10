@@ -506,7 +506,7 @@ class Path3DCollection(PathCollection):
         vys = vys[z_markers_idx]
         fcs = fcs[z_markers_idx]
         ecs = ecs[z_markers_idx]
-        vps = np.vstack((vxs, vys)).T
+        vps = np.column_stack((vxs, vys))
 
         fcs = mcolors.to_rgba_array(fcs, self._alpha)
         ecs = mcolors.to_rgba_array(ecs, self._alpha)
