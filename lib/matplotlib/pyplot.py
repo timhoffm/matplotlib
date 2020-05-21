@@ -306,58 +306,111 @@ def draw_if_interactive(*args, **kwargs):
 # This function's signature is rewritten upon backend-load by switch_backend.
 def show(*args, **kwargs):
     """
-    Display all figures.
+    Display all open figures.
 
-    When running in ipython with its pylab mode, display all
-    figures and return to the ipython prompt.
+    In non-interactive mode, *block* defaults to True.  All figures
+    will display and show will not return until all windows are closed.
+    If there are no figures, return immediately.
 
-    In non-interactive mode, display all figures and block until
-    the figures have been closed; in interactive mode it has no
-    effect unless figures were created prior to a change from
-    non-interactive to interactive mode (not recommended).  In
-    that case it displays the figures but does not block.
+    In interactive mode *block* defaults to False.  This will ensure
+    that all of the figures are shown and this function immediately returns.
 
     Parameters
     ----------
     block : bool, optional
-        This is experimental, and may be set to ``True`` or ``False`` to
-        override the blocking behavior described above.
+
+        If `True` block and run the GUI main loop until all windows
+        are closed.
+
+        If `False` ensure that all windows are displayed and return
+        immediately.  In this case, you are responsible for ensuring
+        that the event loop is running to have responsive figures.
+
+    See Also
+    --------
+    ion : enable interactive mode
+    ioff : disable interactive mode
+
     """
     _warn_if_gui_out_of_main_thread()
     return _backend_mod.show(*args, **kwargs)
 
 
 def isinteractive():
-    """Return whether to redraw after every plotting command."""
+    """
+    Return if pyplot is in "interactive mode" or not.
+
+    If in interactive mode then:
+
+      - newly created figures will be shown immediately
+      - figures will automatically redraw on change
+      - `.pyplot.show` will not block by default
+
+    If not in interactive mode then:
+
+      - newly created figures and changes to figures will
+        not be reflected until explicitly asked to be
+      - `.pyplot.show` will block by default
+
+    See Also
+    --------
+    ion : enable interactive mode
+    ioff : disable interactive mode
+
+    show : show windows (and maybe block)
+    pause : show windows, run GUI event loop, and block for a time
+    """
     return matplotlib.is_interactive()
 
 
 def ioff():
-    """Turn the interactive mode off."""
+    """
+    Turn the interactive mode off.
+
+    See Also
+    --------
+    ion : enable interactive mode
+    isinteractive : query current state
+
+    show : show windows (and maybe block)
+    pause : show windows, run GUI event loop, and block for a time
+    """
     matplotlib.interactive(False)
     uninstall_repl_displayhook()
 
 
 def ion():
-    """Turn the interactive mode on."""
+    """
+    Turn the interactive mode on.
+
+    See Also
+    --------
+    ioff : disable interactive mode
+    isinteractive : query current state
+
+    show : show windows (and maybe block)
+    pause : show windows, run GUI event loop, and block for a time
+    """
     matplotlib.interactive(True)
     install_repl_displayhook()
 
 
 def pause(interval):
     """
-    Pause for *interval* seconds.
+    Run the GUI event loop for *interval* seconds.
 
     If there is an active figure, it will be updated and displayed before the
     pause, and the GUI event loop (if any) will run during the pause.
 
-    This can be used for crude animation.  For more complex animation, see
+    This can be used for crude animation.  For more complex animation use
     :mod:`matplotlib.animation`.
 
-    Notes
-    -----
-    This function is experimental; its behavior may be changed or extended in a
-    future release.
+    If there is no active figure, sleep for *interval* seconds instead.
+
+    See Also
+    --------
+    matplotlib.animation : Complex animation
+    show : show figures and optional block forever
     """
     manager = _pylab_helpers.Gcf.get_active()
     if manager is not None:
@@ -935,19 +988,21 @@ def subplot(*args, **kwargs):
 
     Parameters
     ----------
-    *args, default: (1, 1, 1)
-        Either a 3-digit integer or three separate integers
-        describing the position of the subplot. If the three
-        integers are *nrows*, *ncols*, and *index* in order, the
-        subplot will take the *index* position on a grid with *nrows*
-        rows and *ncols* columns. *index* starts at 1 in the upper left
-        corner and increases to the right.
+    *args : int, (int, int, *index*), or `.SubplotSpec`, default: (1, 1, 1)
+        The position of the subplot described by one of
 
-        *pos* is a three digit integer, where the first digit is the
-        number of rows, the second the number of columns, and the third
-        the index of the subplot. i.e. fig.add_subplot(235) is the same as
-        fig.add_subplot(2, 3, 5). Note that all integers must be less than
-        10 for this form to work.
+        - Three integers (*nrows*, *ncols*, *index*). The subplot will take the
+          *index* position on a grid with *nrows* rows and *ncols* columns.
+          *index* starts at 1 in the upper left corner and increases to the
+          right. *index* can also be a two-tuple specifying the (*first*,
+          *last*) indices (1-based, and including *last*) of the subplot, e.g.,
+          ``fig.add_subplot(3, 1, (1, 2))`` makes a subplot that spans the
+          upper 2/3 of the figure.
+        - A 3-digit integer. The digits are interpreted as if given separately
+          as three single-digit integers, i.e. ``fig.add_subplot(235)`` is the
+          same as ``fig.add_subplot(2, 3, 5)``. Note that this can only be used
+          if there are no more than 9 subplots.
+        - A `.SubplotSpec`.
 
     projection : {None, 'aitoff', 'hammer', 'lambert', 'mollweide', \
 'polar', 'rectilinear', str}, optional
