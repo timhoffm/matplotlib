@@ -15,7 +15,7 @@ Builtin colormaps, colormap handling utilities, and the `ScalarMappable` mixin.
   normalization.
 """
 
-from collections.abc import MutableMapping
+from collections.abc import Mapping, MutableMapping
 
 import numpy as np
 from numpy import ma
@@ -91,13 +91,70 @@ class _DeprecatedCmapDictWrapper(MutableMapping):
         )
 
 
+class ColormapRegistry(Mapping):
+    r"""
+    Container for colormaps that are known to Matplotlib by name.
+
+    Read access uses a dict-like interface mapping names to `.Colormap`\s.
+    Returned `.Colormap`\s are copies, so that their modification does not
+    change the global definition of the colormap.
+
+    Additional colormaps can be added via `.ColormapRegistry.register`.
+    """
+    def __init__(self, cmaps):
+        self._cmaps = cmaps
+
+    def __getitem__(self, item):
+        try:
+            return self._cmaps[item].copy()
+        except KeyError:
+            raise KeyError(f"{item!r} is not a known colormap name")
+
+    def __iter__(self):
+        return iter(self._cmaps)
+
+    def __len__(self):
+        return len(self._cmaps)
+
+    def __str__(self):
+        return ('ColormapRegistry; available colormaps:\n' +
+            ', '.join(f"'{name}'" for name in self))
+
+    def register(self, cmap, *, name=None):
+        """
+        Register a new colormap.
+
+        The colormap name can then be used as a string argument to any ``cmap``
+        parameter in Matplotlib. It is also available in `.pyplot.get_cmap`.
+
+        The colormap registry stores a copy of the given colormap, so that
+        future changes to the original colormap instance do not affect the
+        registered colormap. Think of this as the registry taking a snapshot
+        of the colormap at registration.
+
+        Parameters
+        ----------
+        cmap : matplotlib.colors.Colormap
+           The colormap to register.
+
+        name : str, optional
+           The name for the colormap. If not given, the :attr:`~.Colormap.name`
+           attribute of *cmap* is used.
+        """
+        register_cmap(name, cmap.copy())
+
+
 _cmap_registry = _gen_cmap_registry()
 globals().update(_cmap_registry)
 # This is no longer considered public API
 cmap_d = _DeprecatedCmapDictWrapper(_cmap_registry)
 __builtin_cmaps = tuple(_cmap_registry)
+colormaps = ColormapRegistry(_cmap_registry)
+r"""
+Container for all registered colormaps.
 
-# Continue with definitions ...
+This is a read-only mapping of names to `.Colormap`\s. Use like a dict.
+"""
 
 
 def register_cmap(name=None, cmap=None, *, override_builtin=False):
