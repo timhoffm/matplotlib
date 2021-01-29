@@ -502,6 +502,125 @@ class Ticker:
         self._formatter = formatter
 
 
+class _TickCollection:
+    """
+    A facade for tick lists based on _LazyTickList.
+
+    This provides an interface for manipulating the ticks collectively. It
+    removes the need to address individual elements of the tick lists and thus
+    opens up a path of replacing individual lines with collections while
+    keeping the API stable::
+
+      - tick lists                          - tick collection
+        - tick (Tick)                         - tick1lines (LineCollection)
+          - tick1line  (Line2D)               - tick2lines (LineCollection)
+          - tick2line  (Line2D)     ===>      - tick1labels (TextCollection*)
+          - tick1label (Text)                 - tick2labels (TextCollection*)
+          - tick2label (Text)                 - gridline
+          - gridline   (Line2D)
+        - tick (Tick)
+          - ...
+        - tick (Tick)
+          - ...
+
+    (*) TextCollection does not yet exists. Probably worth implementing, but
+    we can also use lists of Text for the time being.
+
+    """
+    def __init__(self, axis, ticklist_name):
+        """
+        We cannot initialize this in Axis using
+        ``_TickCollection(self.majorTicks)``, because that would trigger the
+        evaluation mechanism of the _LazyTickList. Therefore we delay the
+        access to the latest possible point via the property
+        ``self._ticklist``.
+        """
+        self._axis = axis
+        self._ticklist_name = ticklist_name
+
+    def __len__(self):
+        return len(self._ticklist)
+
+    @property
+    def _ticklist(self):
+        """Delayed access to resolve _LazyTickList as late as possible."""
+        return getattr(self._axis, self._ticklist_name)
+
+    def apply_params(self, **kwargs):
+        """Apply **kwargs to all ticks."""
+        for tick in self._ticklist:
+            tick._apply_params(**kwargs)
+
+    def set_clip_path(self, clippath, transform):
+        """
+        Set the clip path for all ticks.
+
+        See `.Artist.set_clip_path`.
+        """
+        for tick in self._ticklist:
+            tick.set_clip_path(clippath, transform)
+
+    def _get_tick_position(self):
+        """See Axis._get_ticks_position()."""
+        tick = self._ticklist[0]
+        if (tick.tick1line.get_visible()
+                and not tick.tick2line.get_visible()
+                and tick.label1.get_visible()
+                and not tick.label2.get_visible()):
+            return 1
+        elif (tick.tick2line.get_visible()
+                 and not tick.tick1line.get_visible()
+                 and tick.label2.get_visible()
+                 and not tick.label1.get_visible()):
+            return 2
+        elif (tick.tick1line.get_visible()
+                 and tick.tick2line.get_visible()
+                 and tick.label1.get_visible()
+                 and not tick.label2.get_visible()):
+            return "default"
+        else:
+            return "unknown"
+
+    def get_ticks(self, numticks, tick_getter):
+        #if numticks is None:
+        #    numticks = len(self.get_majorticklocs())
+
+        while len(self._ticklist) < numticks:
+            # Update the new tick label properties from the old.
+            tick = tick_getter()
+            self._ticklist.append(tick)
+            self._axis._copy_tick_props(self._ticklist[0], tick)
+
+        return self._ticklist[:numticks]
+
+    def get_tick_padding(self):
+        if not self._ticklist:
+            return 0
+        else:
+            return self._ticklist[0].get_tick_padding()
+
+    def get_pad_pixels(self):
+        return self._ticklist[0].get_pad_pixels()
+
+    def set_label_alignment(self, label1_va, label1_ha, label2_va, label2_ha):
+        for t in self._ticklist:
+            t.label1.set_va(label1_va)
+            t.label1.set_ha(label1_ha)
+            t.label2.set_va(label2_va)
+            t.label2.set_ha(label2_ha)
+
+    def get_grid_visible(self):
+        # Return True/False if all grid lines are on or off, None if they are
+        # not all in the same state.
+        if all(tick.gridline.get_visible() for tick in self._ticklist):
+            return True
+        elif not any(tick.gridline.get_visible() for tick in self._ticklist):
+            return False
+        else:
+            return None
+
+
+
 class _LazyTickList:
     """
     A descriptor for lazy instantiation of tick lists.
@@ -639,6 +758,9 @@ class Axis(martist.Artist):
         self._major_tick_kw = dict()
         self._minor_tick_kw = dict()
 
+        self._major_ticks = _TickCollection(self, "majorTicks")
+        self._minor_ticks = _TickCollection(self, "minorTicks")
+
         if clear:
             self.clear()
         else:
@@ -694,6 +816,8 @@ class Axis(martist.Artist):
         """Return the axis name."""
         return next(name for name, axis in self.axes._axis_map.items()
                     if axis is self)
+
+        # Interface to address the ticklists via a single entity
 
     # During initialization, Axis objects often create ticks that are later
     # unused; this turns out to be a very slow step.  Instead, use a custom
@@ -965,12 +1089,10 @@ class Axis(martist.Artist):
         else:
             if which in ['major', 'both']:
                 self._major_tick_kw.update(kwtrans)
-                for tick in self.majorTicks:
-                    tick._apply_params(**kwtrans)
+                self._major_ticks.apply_params(**kwtrans)
             if which in ['minor', 'both']:
                 self._minor_tick_kw.update(kwtrans)
-                for tick in self.minorTicks:
-                    tick._apply_params(**kwtrans)
+                self._minor_ticks.apply_params(**kwtrans)
             # labelOn and labelcolor also apply to the offset text.
             if 'label1On' in kwtrans or 'label2On' in kwtrans:
                 self.offsetText.set_visible(
@@ -1107,8 +1229,8 @@ class Axis(martist.Artist):
 
     def set_clip_path(self, path, transform=None):
         super().set_clip_path(path, transform)
-        for child in self.majorTicks + self.minorTicks:
-            child.set_clip_path(path, transform)
+        self._major_ticks.set_clip_path(path, transform)
+        self._minor_ticks.set_clip_path(path, transform)
         self.stale = True
 
     def get_view_interval(self):
@@ -1379,12 +1501,11 @@ class Axis(martist.Artist):
             return None
 
     def get_tick_padding(self):
-        values = []
-        if len(self.majorTicks):
-            values.append(self.majorTicks[0].get_tick_padding())
-        if len(self.minorTicks):
-            values.append(self.minorTicks[0].get_tick_padding())
-        return max(values, default=0)
+        pads = [
+            self._major_ticks.get_tick_padding(),
+            self._minor_ticks.get_tick_padding(),
+        ]
+        return max((p for p in pads if p is not None), default=0)
 
     @martist.allow_rasterization
     def draw(self, renderer):
@@ -1651,14 +1772,8 @@ class Axis(martist.Artist):
         """
         if numticks is None:
             numticks = len(self.get_majorticklocs())
-
-        while len(self.majorTicks) < numticks:
-            # Update the new tick label properties from the old.
-            tick = self._get_tick(major=True)
-            self.majorTicks.append(tick)
-            self._copy_tick_props(self.majorTicks[0], tick)
-
-        return self.majorTicks[:numticks]
+        return self._major_ticks.get_ticks(
+            numticks, tick_getter=functools.partial(self._get_tick, True))
 
     def get_minor_ticks(self, numticks=None):
         r"""
@@ -1677,14 +1792,8 @@ class Axis(martist.Artist):
         """
         if numticks is None:
             numticks = len(self.get_minorticklocs())
-
-        while len(self.minorTicks) < numticks:
-            # Update the new tick label properties from the old.
-            tick = self._get_tick(major=False)
-            self.minorTicks.append(tick)
-            self._copy_tick_props(self.minorTicks[0], tick)
-
-        return self.minorTicks[:numticks]
+        return self._minor_ticks.get_ticks(
+            numticks, tick_getter=functools.partial(self._get_tick, False))
 
     def grid(self, visible=None, which='major', **kwargs):
         """
@@ -2286,26 +2395,11 @@ class Axis(martist.Artist):
         - "default" if only tick1line, tick2line and label1 are visible;
         - "unknown" otherwise.
         """
-        major = self.majorTicks[0]
-        minor = self.minorTicks[0]
-        if all(tick.tick1line.get_visible()
-               and not tick.tick2line.get_visible()
-               and tick.label1.get_visible()
-               and not tick.label2.get_visible()
-               for tick in [major, minor]):
-            return 1
-        elif all(tick.tick2line.get_visible()
-                 and not tick.tick1line.get_visible()
-                 and tick.label2.get_visible()
-                 and not tick.label1.get_visible()
-                 for tick in [major, minor]):
-            return 2
-        elif all(tick.tick1line.get_visible()
-                 and tick.tick2line.get_visible()
-                 and tick.label1.get_visible()
-                 and not tick.label2.get_visible()
-                 for tick in [major, minor]):
-            return "default"
+        major_pos = self._major_ticks._get_tick_position()
+        minor_pos = self._minor_ticks._get_tick_position()
+
+        if major_pos == minor_pos:
+            return major_pos
         else:
             return "unknown"
 
