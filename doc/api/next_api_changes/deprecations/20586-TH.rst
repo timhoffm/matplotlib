@@ -1,0 +1,5 @@
+``matplotlib.test()`` is deprecated
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Run tests using ``pytest`` from the commandline instead. See :ref:`testing`
+for more details. The variable ``matplotlib.default_test_modules`` is only
+used for ``matplotlib.test()`` and is thus deprecated as well.
