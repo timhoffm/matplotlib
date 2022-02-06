@@ -41,7 +41,7 @@ from . import axis3d
 
 
 @docstring.interpd
-@cbook._define_aliases({
+@_api.define_aliases({
     "xlim3d": ["xlim"], "ylim3d": ["ylim"], "zlim3d": ["zlim"]})
 class Axes3D(Axes):
     """
