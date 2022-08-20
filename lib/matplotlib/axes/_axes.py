@@ -2828,6 +2828,39 @@ class Axes(_AxesBase):
 
         return col
 
+    def stacked_bar(self, x, heights, width=0.8, bottom=None, *, align="center",
+                    **kwargs):
+
+        # Note on data orientation:
+        # - TODO: if height is a numpy array: datasets are per column
+        # - if heights is an iterable, datasets are the elements of that iterable
+        # - TODO: support for data parameter
+        # Limtations:
+        # - orientation = horizontal is not yet supported
+        # - error bars are not yet supported
+        # Open issues:
+        # - single value handling of color, edgecolor
+        # - check consistent lenghts
+
+        len_x = len(x)
+        
+        bottom = np.zeros(len_x) if bottom is None else np.asarray(bottom)
+        color = kwargs.pop('color', [None] * len_x)
+        edgecolor = kwargs.pop('edgecolor', [None] * len_x)
+        labels = kwargs.pop('labels', [''] * len_x)
+
+        for param in ['xerr', 'yerr', 'ecolor', 'capsize', 'error_kw', 'log', 'orientation']:
+            if param in kwargs:
+                raise TypeError(f'{param!r} is not supported for stacked_bar')
+
+        result_conainers = []
+        for h, c, ec, lbl in zip(heights, color, edgecolor, labels):
+            container = self.bar(x, h, width, bottom=bottom, align=align,
+                                 color=c, edgecolor=ec, label=lbl, **kwargs)
+            result_conainers.append(container)
+            bottom += h
+        return result_conainers
+
     @_preprocess_data()
     @_api.delete_parameter("3.6", "use_line_collection")
     def stem(self, *args, linefmt=None, markerfmt=None, basefmt=None, bottom=0,
