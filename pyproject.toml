@@ -4,7 +4,7 @@ authors = [
   {email = "matplotlib-users@python.org"},
   {name = "John D. Hunter, Michael Droettboom"}
 ]
-description = "Python plotting package"
+description = "Python visualization library"
 readme = "README.md"
 license = { file = "LICENSE/LICENSE" }
 dynamic = ["version"]
