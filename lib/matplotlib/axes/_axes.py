@@ -247,8 +247,12 @@ class Axes(_AxesBase):
         The elements to be added to the legend are automatically determined,
         when you do not pass in any extra arguments.
 
-        In this case, the labels are taken from the artist. You can specify
-        them either at artist creation or by calling the
+        In this case, the labels are taken from the artist when creating the
+        legend. There is no permanent synchronization between the Artist's
+        label property and the label in the legend.
+
+        You can specify the artist label during creation as keyword argument
+        to the plotting function, or by calling the
         :meth:`~.Artist.set_label` method on the artist::
 
             ax.plot([1, 2, 3], label='Inline label')
