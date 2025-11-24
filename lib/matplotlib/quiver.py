@@ -247,6 +247,10 @@ See Also
 
 Notes
 -----
+**Data shape**
+
+2D inputs for *X*, *Y*, *U*, *V*, *C* are only for convenience. The internal
+storage and thus the respective attributes are always a ravelled 1D array.
 
 **Arrow shape**
 
@@ -446,6 +450,13 @@ def _parse_args(*args, caller_name='function'):
 
     caller_name : str
         Name of the calling method (used in error messages).
+
+    Returns
+    -------
+    X, Y : ndarray
+        Position coordinates as ravelled 1d arrays.
+    U, V, C : ndarray or None
+        Arrow direction components and numeric data as passed in.
     """
     X = Y = C = None
 
@@ -584,6 +595,26 @@ class Quiver(mcollections.PolyCollection):
         self.stale = False
 
     def set_UVC(self, U, V, C=None):
+        """
+        Update the quiver arrow directions and color.
+
+        Parameters
+        ----------
+        U, V : 1D or 2D array-like
+            The new x and y direction components of the arrow vectors. See also
+            *U*, *V* in the `.Quiver` documentation.
+        C : 1D or 2D array-like, optional
+            Numeric data to be colormapped for each arrow. See also the
+            `.Quiver` documentation. If not given, previous *C* values are
+            preserved.
+
+        Notes
+        -----
+        *U*, *V*, and *C* must have the same number of elements as there are
+        arrows in the Quiver. If you want to change the number / positions of
+        arrows as well, update `.Quiver.set_offsets` before calling
+        `.Quiver.set_UVC`.
+        """
         # We need to ensure we have a copy, not a reference
         # to an array that might change before draw().
         U = ma.masked_invalid(U, copy=True).ravel()
@@ -1162,6 +1193,26 @@ class Barbs(mcollections.PolyCollection):
         return barb_list
 
     def set_UVC(self, U, V, C=None):
+        """
+        Update the barb directions and colors.
+
+        Parameters
+        ----------
+        U, V : 1D or 2D array-like
+            The new x and y direction components of the barbs. See also
+            *U*, *V* in the `.Barbs` documentation.
+        C : 1D or 2D array-like, optional
+            Numeric data to be colormapped for each barb. See also the
+            `.Barbs` documentation. If not given, previous *C* values are
+            preserved.
+
+        Notes
+        -----
+        *U*, *V*, and *C* must have the same number of elements as there are
+        arrows in the Quiver. If you want to change the number / positions of
+        arrows as well, update `.Barbs.set_offsets` before calling
+        `.Barbs.set_UVC`.
+        """
         # We need to ensure we have a copy, not a reference to an array that
         # might change before draw().
         self.u = ma.masked_invalid(U, copy=True).ravel()
