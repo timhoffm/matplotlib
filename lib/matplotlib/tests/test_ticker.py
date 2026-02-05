@@ -604,6 +604,12 @@ class TestIndexLocator:
         assert index._base == 7
         assert index.offset == 7
 
+    def test_tick_values(self):
+        index = IndexLocator(base=1, offset=0)
+        assert_array_equal(index.tick_values(0, 5), [0, 1, 2, 3, 4, 5])
+
+        index = IndexLocator(base=1, offset=0.5)
+        assert_array_equal(index.tick_values(0, 5), [0.5, 1.5, 2.5, 3.5, 4.5])
 
 class TestSymmetricalLogLocator:
     def test_set_params(self):
