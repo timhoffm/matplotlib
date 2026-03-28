@@ -920,7 +920,7 @@ class TestScalarFormatter:
             ax.yaxis.set_major_locator(mticker.MaxNLocator(4))
 
         tmp_form.set_locs(ax.yaxis.get_majorticklocs())
-        assert orderOfMag == tmp_form.orderOfMagnitude
+        assert orderOfMag == tmp_form._orderOfMagnitude
 
     @pytest.mark.parametrize('value, expected', format_data)
     def test_format_data(self, value, expected):

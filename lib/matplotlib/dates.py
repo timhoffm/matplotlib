@@ -665,6 +665,10 @@ class ConciseDateFormatter(ticker.Formatter):
 
     """
 
+    offset_string = _api.deprecate_privatize_attribute(
+        "3.11", alternative="get_offset()"
+    )
+
     def __init__(self, locator, tz=None, formats=None, offset_formats=None,
                  zero_formats=None, show_offset=True, *, usetex=None):
         """
@@ -719,7 +723,7 @@ class ConciseDateFormatter(ticker.Formatter):
                                    '%Y-%b-%d',
                                    '%Y-%b-%d',
                                    '%Y-%b-%d %H:%M']
-        self.offset_string = ''
+        self._offset_string = ''
         self.show_offset = show_offset
         self._usetex = mpl._val_or_rc(usetex, 'text.usetex')
 

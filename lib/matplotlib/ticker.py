@@ -202,7 +202,9 @@ class Formatter(TickHelper):
     """
     # some classes want to see all the locs to help format
     # individual ones
-    locs = []
+    _locs = []
+
+    locs = _api.deprecate_privatize_attribute("3.11")
 
     def __call__(self, x, pos=None):
         """
@@ -250,7 +252,7 @@ class Formatter(TickHelper):
         This method is called before computing the tick labels because some
         formatters need to know all tick locations to do so.
         """
-        self.locs = locs
+        self._locs = locs
 
     @staticmethod
     def fix_minus(s):
@@ -458,6 +460,9 @@ class ScalarFormatter(Formatter):
 
     """
 
+    orderOfMagnitude = _api.deprecate_privatize_attribute("3.11")
+    format = _api.deprecate_privatize_attribute("3.11")
+
     def __init__(self, useOffset=None, useMathText=None, useLocale=None, *,
                  usetex=None):
         useOffset = mpl._val_or_rc(useOffset, 'axes.formatter.useoffset')
@@ -465,8 +470,8 @@ class ScalarFormatter(Formatter):
         self.set_useOffset(useOffset)
         self.set_usetex(usetex)
         self.set_useMathText(useMathText)
-        self.orderOfMagnitude = 0
-        self.format = ''
+        self._orderOfMagnitude = 0
+        self._format = ''
         self._scientific = True
         self._powerlimits = mpl.rcParams['axes.formatter.limits']
         self.set_useLocale(useLocale)
@@ -1446,7 +1451,7 @@ class EngFormatter(ScalarFormatter):
             xp = (x - self.offset) / (10. ** self.orderOfMagnitude)
             if abs(xp) < 1e-8:
                 xp = 0
-            return self._format_maybe_minus_and_locale(self.format, xp)
+            return self._format_maybe_minus_and_locale(self._format, xp)
 
     def set_locs(self, locs):
         # docstring inherited

@@ -24,6 +24,7 @@ class TickHelper:
 
 class Formatter(TickHelper):
     locs: list[float]
+    _locs: list[float]
     def __call__(self, x: float, pos: int | None = ...) -> str: ...
     def format_ticks(self, values: list[float]) -> list[str]: ...
     def format_data(self, value: float) -> str: ...
@@ -58,7 +59,9 @@ class StrMethodFormatter(Formatter):
 
 class ScalarFormatter(Formatter):
     orderOfMagnitude: int
+    _orderOfMagnitude: int
     format: str
+    _format: str
     def __init__(
         self,
         useOffset: bool | float | None = ...,
